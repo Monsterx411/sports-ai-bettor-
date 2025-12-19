@@ -1,0 +1,10 @@
+sports-ai-bettor/
+├── data_fetch.py       # API calls for fixtures, historical data, and odds
+├── predictor.py        # ML model training, prediction, and value bet logic
+├── cli_app.py          # Command-line interface
+├── web_app.py          # Streamlit web dashboard
+├── models/             # Saved trained models (gitignored)
+├── data/               # Cached/historical datasets (gitignored)
+├── requirements.txt    # Dependencies
+├── README.md           # This file
+└── .gitignore
