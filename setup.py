@@ -9,13 +9,13 @@ long_description = (this_directory / "README.md").read_text(encoding="utf-8") if
 
 setup(
     name="sports-ai-bettor",
-    version="1.0.0",
+    version="1.0.1",
     description="AI-powered sports betting predictions with value bet analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Sports AI Bettor Team",
-    author_email="your@email.com",
-    url="https://github.com/yourusername/sports-ai-bettor",
+    author="Monsterx411",
+    author_email="monsterx411@users.noreply.github.com",
+    url="https://github.com/Monsterx411/sports-ai-bettor-",
     packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
