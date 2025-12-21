@@ -8,9 +8,10 @@ import pickle
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from datetime import datetime
 
 from config.settings import settings, MODELS_DIR
@@ -51,7 +52,9 @@ class ModelManager:
 
         # Prepare data
         if feature_cols is None:
-            feature_cols = [col for col in df.columns if col != target_col]
+            # Use only numeric feature columns
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            feature_cols = [col for col in numeric_cols if col != target_col]
         
         if target_col not in df.columns:
             logger.error(f"Target column '{target_col}' not found")
@@ -103,6 +106,104 @@ class ModelManager:
         # Save model
         self.save(model_name)
         
+        return metrics
+
+    def train_advanced(
+        self,
+        df: pd.DataFrame,
+        target_col: str = "home_win",
+        feature_cols: Optional[List[str]] = None,
+        model_name: str = "sports_model_advanced",
+        n_iter: int = 20,
+        cv_folds: int = 5,
+        scoring: str = "roc_auc"
+    ) -> Dict[str, Any]:
+        """
+        Train with hyperparameter search, cross-validation and probability calibration.
+        Returns best CV metrics and saves calibrated model.
+        """
+        logger.info(f"Starting advanced training with {len(df)} samples")
+
+        if feature_cols is None:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            feature_cols = [c for c in numeric_cols if c != target_col]
+        if target_col not in df.columns:
+            logger.error(f"Target column '{target_col}' not found")
+            return {}
+
+        self.feature_names = feature_cols
+        X = df[feature_cols].fillna(0)
+        y = df[target_col]
+
+        # Define search space
+        param_distributions = {
+            "n_estimators": [100, 200, 300, 400, 500],
+            "max_depth": [None, 5, 10, 20, 30],
+            "min_samples_split": [2, 5, 10],
+            "min_samples_leaf": [1, 2, 4],
+            "max_features": ["sqrt", "log2", None],
+            "bootstrap": [True, False]
+        }
+
+        base_model = RandomForestClassifier(random_state=settings.RANDOM_STATE, n_jobs=-1)
+
+        cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=settings.RANDOM_STATE)
+        search = RandomizedSearchCV(
+            estimator=base_model,
+            param_distributions=param_distributions,
+            n_iter=n_iter,
+            cv=cv,
+            scoring=scoring,
+            n_jobs=-1,
+            verbose=1,
+            random_state=settings.RANDOM_STATE
+        )
+
+        search.fit(X, y)
+        best_model = search.best_estimator_
+
+        # Probability calibration for better probabilities
+        try:
+            calibrated = CalibratedClassifierCV(best_model, method="isotonic", cv=cv)
+            calibrated.fit(X, y)
+            self.model = calibrated
+            calibrated_flag = True
+        except Exception as e:
+            logger.warning(f"Calibration failed, using best model directly: {e}")
+            self.model = best_model
+            calibrated_flag = False
+
+        # Compute CV-like holdout metrics
+        X_tr, X_te, y_tr, y_te = train_test_split(
+            X, y,
+            test_size=settings.TEST_SIZE,
+            random_state=settings.RANDOM_STATE,
+            stratify=y if len(y.unique()) > 1 else None
+        )
+        self.model.fit(X_tr, y_tr)
+        y_pred = self.model.predict(X_te)
+        metrics = {
+            "accuracy": float(accuracy_score(y_te, y_pred)),
+            "precision": float(precision_score(y_te, y_pred, average="weighted", zero_division=0)),
+            "recall": float(recall_score(y_te, y_pred, average="weighted", zero_division=0)),
+            "f1": float(f1_score(y_te, y_pred, average="weighted", zero_division=0)),
+            "cv_best_score": float(search.best_score_),
+            "calibrated": calibrated_flag,
+            "best_params": search.best_params_,
+        }
+
+        self.model_metadata = {
+            "trained_at": datetime.now().isoformat(),
+            "feature_names": feature_cols,
+            "target": target_col,
+            "samples": len(df),
+            "metrics": metrics,
+            "best_params": search.best_params_,
+            "calibrated": calibrated_flag
+        }
+
+        logger.info(f"Advanced model trained. CV best {scoring}: {metrics['cv_best_score']:.4f}")
+        self.save(model_name)
         return metrics
 
     def predict(self, features: List[float]) -> Dict[str, float]:

@@ -12,7 +12,7 @@ import logging
 
 from src.live_sports_data import get_live_fetcher, LiveMatch
 from src.data_fetch import SportsDataFetcher
-from config.settings import settings
+from config.settings import settings, DATA_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,8 @@ class UnifiedDataSourceManager:
         logger.info(f"Loading historical {sport} data...")
         
         # Load from data directory
-        data_dir = Path(settings.DATA_DIR)
+        # Use module-level DATA_DIR constant from config.settings
+        data_dir = Path(DATA_DIR)
         csv_files = list(data_dir.glob("*.csv"))
         
         dfs = []

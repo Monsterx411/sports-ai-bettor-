@@ -24,123 +24,44 @@ def main():
         from unified_data_source import UnifiedDataSourceManager
         from integrated_prediction import IntegratedPredictionEngine
         
-        print("\n✅ Loading live sports data fetcher...")
+        print("✅ Loading live sports data fetcher...")
         live_fetcher = LiveSportsDataFetcher()
-        
+
         print("✅ Loading unified data source manager...")
         data_manager = UnifiedDataSourceManager()
-        
+
         print("✅ Loading prediction engine...")
         prediction_engine = IntegratedPredictionEngine()
         
-        # Fetch today's soccer matches
-        print("\n📊 Fetching today's soccer matches...")
-        today_matches = live_fetcher.fetch_live_soccer_matches()
-        
-        if today_matches:
-            print(f"✅ Found {len(today_matches)} soccer matches for today")
-            
-            # Display upcoming matches
-            print("\n" + "-"*80)
-            print("📅 TODAY'S UPCOMING MATCHES")
-            print("-"*80)
-            
-            for idx, match in enumerate(today_matches[:10], 1):  # Show first 10
-                print(f"\n{idx}. {match.get('home_team', 'N/A')} vs {match.get('away_team', 'N/A')}")
-                if match.get('league'):
-                    print(f"   League: {match['league']}")
-                if match.get('match_date'):
-                    print(f"   Time: {match['match_date']}")
-                if match.get('odds'):
-                    odds = match['odds']
-                    print(f"   Odds - Home: {odds.get('home', 'N/A')} | Draw: {odds.get('draw', 'N/A')} | Away: {odds.get('away', 'N/A')}")
-        else:
-            print("⚠️  No matches found for today. Using mock data for demonstration...")
-            today_matches = create_mock_matches()
-            print(f"✅ Created {len(today_matches)} mock matches for demonstration")
-        
-        # Generate predictions
-        print("\n" + "-"*80)
-        print("🤖 GENERATING PREDICTIONS")
-        print("-"*80)
-        
+        # Train model with advanced pipeline
+        print("\n📚 Training model (advanced)...")
         try:
-            # Train on historical data
-            print("\n📚 Training model on historical data...")
-            prediction_engine.train_on_live_and_historical(sport="soccer")
-            print("✅ Model training complete")
-            
-            # Generate predictions for matches
-            predictions = []
-            for match in today_matches[:5]:  # Predict top 5 matches
-                try:
-                    pred = prediction_engine.predict_match(
-                        home_team=match.get('home_team'),
-                        away_team=match.get('away_team'),
-                        odds_home=match.get('odds', {}).get('home'),
-                        odds_draw=match.get('odds', {}).get('draw'),
-                        odds_away=match.get('odds', {}).get('away')
-                    )
-                    if pred:
-                        predictions.append({
-                            'match': match,
-                            'prediction': pred
-                        })
-                except Exception as e:
-                    print(f"⚠️  Could not predict {match.get('home_team')} vs {match.get('away_team')}: {str(e)[:50]}")
-            
-            if predictions:
-                # Display predictions
-                print("\n" + "-"*80)
-                print("💰 VALUE BET RECOMMENDATIONS")
-                print("-"*80)
-                
-                for idx, item in enumerate(predictions, 1):
-                    match = item['match']
-                    pred = item['prediction']
-                    
-                    print(f"\n{idx}. {match.get('home_team', 'N/A')} vs {match.get('away_team', 'N/A')}")
-                    print(f"   League: {match.get('league', 'N/A')}")
-                    
-                    if isinstance(pred, dict):
-                        print(f"   Prediction: {pred.get('prediction', 'N/A')}")
-                        if pred.get('confidence'):
-                            print(f"   Confidence: {pred['confidence']:.1%}")
-                        if pred.get('edge'):
-                            edge_pct = (pred['edge'] * 100) if pred['edge'] else 0
-                            print(f"   Edge: +{edge_pct:.1f}% (Value Bet)")
-                        if pred.get('expected_value'):
-                            print(f"   Expected Value: ${pred['expected_value']:.2f} per $1 bet")
-                        if pred.get('recommendation'):
-                            recommendation = pred['recommendation']
-                            emoji = {
-                                'STRONG_BUY': '🚀',
-                                'BUY': '✅',
-                                'HOLD': '⏸️',
-                                'SELL': '⚠️',
-                                'AVOID': '❌'
-                            }.get(recommendation, '•')
-                            print(f"   Recommendation: {emoji} {recommendation}")
-                
-                # Summary statistics
-                print("\n" + "-"*80)
-                print("📈 SUMMARY")
-                print("-"*80)
-                strong_buys = sum(1 for p in predictions if p['prediction'].get('recommendation') == 'STRONG_BUY')
-                buys = sum(1 for p in predictions if p['prediction'].get('recommendation') == 'BUY')
-                
-                print(f"✅ Total Predictions Generated: {len(predictions)}")
-                print(f"🚀 Strong Buy Opportunities: {strong_buys}")
-                print(f"✅ Buy Opportunities: {buys}")
-                print(f"💡 Prediction Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                
-            else:
-                print("⚠️  Could not generate predictions at this time.")
-                print("💡 Tip: Make sure API keys are valid in .env file")
-                
+            prediction_engine.train_on_live_and_historical(sport="soccer", advanced=True)
+            print("✅ Advanced training complete")
         except Exception as e:
-            print(f"⚠️  Error during prediction: {str(e)}")
-            print("💡 This might be due to: invalid API keys, no internet connection, or API limits reached")
+            print(f"⚠️  Training warning: {e}")
+
+        # Generate at least 10 predictions across top sports
+        print("\n📊 Generating today's predictions (min 10)...")
+        from config.settings import settings
+        sports = [s.strip() for s in settings.TOP_SPORTS.split(",") if s.strip()]
+        predictions = prediction_engine.get_daily_predictions(min_matches=settings.MIN_DAILY_MATCHES, sports=sports)
+        
+        if predictions:
+            # Display predictions
+            print("\n" + "-"*80)
+            print("💰 TODAY'S BET RECOMMENDATIONS (Top 10)")
+            print("-"*80)
+
+            for idx, rec in enumerate(predictions, 1):
+                print(f"\n{idx}. {rec.home_team} vs {rec.away_team} [{rec.sport}]")
+                print(f"   Predicted: {rec.predicted_winner}")
+                print(f"   Confidence: {rec.prediction_confidence:.1%}")
+                print(f"   Edge: {rec.edge:.1%}")
+                print(f"   Recommendation: {rec.recommendation}")
+        else:
+            print("⚠️  Could not generate predictions at this time.")
+            print("💡 Tip: Provide valid API keys in .env for live odds and matches")
         
     except ImportError as e:
         print(f"❌ Import Error: {e}")

@@ -40,6 +40,12 @@ class Settings:
     RANDOM_FOREST_ESTIMATORS: int = int(os.getenv("RANDOM_FOREST_ESTIMATORS", "100"))
     TEST_SIZE: float = float(os.getenv("TEST_SIZE", "0.2"))
     RANDOM_STATE: int = int(os.getenv("RANDOM_STATE", "42"))
+    USE_ADVANCED_TRAINING: bool = os.getenv("USE_ADVANCED_TRAINING", "true").lower() == "true"
+    CV_FOLDS: int = int(os.getenv("CV_FOLDS", "5"))
+
+    # Daily Predictions
+    MIN_DAILY_MATCHES: int = int(os.getenv("MIN_DAILY_MATCHES", "10"))
+    TOP_SPORTS: str = os.getenv("TOP_SPORTS", "soccer,basketball")
 
     # API Settings
     REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "10"))
