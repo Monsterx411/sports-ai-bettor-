@@ -59,7 +59,7 @@ sports-ai-bettor/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/sports-ai-bettor.git
+   git clone https://github.com/Monsterx411/sports-ai-bettor.git
    cd sports-ai-bettor
    ```
 

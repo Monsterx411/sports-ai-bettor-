@@ -1,56 +1,28 @@
 [build-system]
-requires = ["setuptools>=65.0", "wheel", "setuptools-scm>=7.0"]
+requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "sports-ai-bettor"
-version = "1.0.1"
+version = "1.0.0"
 description = "AI-powered sports betting predictions with value bet analysis"
 readme = "README.md"
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.8"
 license = {text = "MIT"}
-
 authors = [
-    {name = "Monsterx411", email = "monsterx411@users.noreply.github.com"}
+    {name = "Sports AI Bettor Team"}
 ]
-
-maintainers = [
-    {name = "Monsterx411", email = "monsterx411@users.noreply.github.com"}
-]
-
-keywords = [
-    "sports",
-    "betting",
-    "machine-learning",
-    "ai",
-    "predictions",
-    "soccer",
-    "football",
-    "value-betting",
-    "sports-analytics",
-]
-
+keywords = ["sports", "betting", "ai", "machine-learning", "predictions"]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Financial and Insurance Industry",
-    "Intended Audience :: Science/Research",
     "Topic :: Office/Business :: Financial :: Investment",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Information Analysis",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Operating System :: MacOS",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Microsoft :: Windows",
 ]
 
 dependencies = [
@@ -69,115 +41,51 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-viz = [
-    "plotly>=5.17.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-]
-
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "pytest-xdist>=3.3.0",
     "black>=23.9.0",
     "flake8>=6.0.0",
-    "pylint>=2.17.0",
     "mypy>=1.5.0",
-    "isort>=5.12.0",
-]
-
-docs = [
-    "sphinx>=7.0.0",
-    "sphinx-rtd-theme>=1.3.0",
-    "sphinx-autodoc-typehints>=1.24.0",
-]
-
-test = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-xdist>=3.3.0",
-    "coverage[toml]>=7.3.0",
-]
-
-prod = [
-    "gunicorn>=21.2.0",
-    "python-dotenv>=1.0.0",
-]
-
-all = [
-    "plotly>=5.17.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-xdist>=3.3.0",
-    "black>=23.9.0",
-    "flake8>=6.0.0",
-    "pylint>=2.17.0",
-    "mypy>=1.5.0",
-    "isort>=5.12.0",
-    "sphinx>=7.0.0",
-    "sphinx-rtd-theme>=1.3.0",
-    "sphinx-autodoc-typehints>=1.24.0",
-    "gunicorn>=21.2.0",
-    "coverage[toml]>=7.3.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/Monsterx411/sports-ai-bettor"
-"Bug Tracker" = "https://github.com/Monsterx411/sports-ai-bettor/issues"
-Documentation = "https://github.com/Monsterx411/sports-ai-bettor#readme"
-"Source Code" = "https://github.com/Monsterx411/sports-ai-bettor"
-Changelog = "https://github.com/Monsterx411/sports-ai-bettor/releases"
-
-[project.scripts]
-sports-ai-bettor = "cli_app:cli"
-sab = "cli_app:cli"
+Homepage = "https://github.com/yourusername/sports-ai-bettor"
+Repository = "https://github.com/yourusername/sports-ai-bettor.git"
+Issues = "https://github.com/yourusername/sports-ai-bettor/issues"
 
 [tool.setuptools]
-packages = ["sports_ai_bettor", "src", "config"]
-
-[tool.setuptools.package-data]
-sports_ai_bettor = [
-    "config/*.py",
-    "src/*.py",
-    "models/.gitkeep",
-    "logs/.gitkeep",
-    "data/.gitkeep",
-]
+packages = ["src", "config"]
 
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py38']
 include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
 
 [tool.isort]
 profile = "black"
 line_length = 100
-multi_line_mode = 3
-include_trailing_comma = true
 
 [tool.mypy]
 python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
-check_untyped_defs = true
+disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = "-v --cov=src --cov=config --cov-report=html --cov-report=term-missing"
-
-[tool.coverage.run]
-source = ["sports_ai_bettor", "src", "config"]
-omit = ["*/tests/*", "*/__pycache__/*"]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "if __name__ == .__main__.:",
-]
-precision = 2
-show_missing = true

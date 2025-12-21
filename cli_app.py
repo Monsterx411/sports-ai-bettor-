@@ -86,15 +86,10 @@ def train(data_file: str, target: str, model_name: str) -> None:
 
 @cli.command()
 @click.option("--model-name", default="sports_model", help="Model name to load")
-@click.argument("features", nargs=-1, type=float, required=True)
+@click.option("--features", type=float, multiple=True, required=True, help="Feature values")
 def predict(model_name: str, features: tuple) -> None:
-    """Make a prediction.
-    
-    Example: cli_app.py predict 0.7 0.6 0.5 2 8 5 62 38
-    """
+    """Make a prediction."""
     click.echo(f"🔮 Making prediction with {model_name}...")
-    click.echo(f"📊 Features: {list(features)}")
-
     
     manager = get_model_manager()
     if not manager.load(model_name):

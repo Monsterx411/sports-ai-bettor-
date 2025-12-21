@@ -2,8 +2,8 @@ import requests
 import pandas as pd
 
 # Replace with your keys
-API_SPORTS_KEY = '5326a01380c7c272fca11cd3a6012e48'
-ODDS_API_KEY = 'bbbc753c94e4ce1652ae2bdfed0d1760'
+API_SPORTS_KEY = 'YOUR_API_SPORTS_KEY'
+ODDS_API_KEY = 'YOUR_ODDS_API_KEY'
 
 def fetch_fixtures(sport='soccer', league='premier_league'):
     url = f"https://api.api-sports.io/v3/fixtures?league={league}&season=2025"
