@@ -32,6 +32,9 @@ models/*.joblib
 data/*.csv
 data/*.parquet
 data/cache/
+data/cache.*/
+data/world-master/
+data/database.sqlite
 logs/
 *.log
 

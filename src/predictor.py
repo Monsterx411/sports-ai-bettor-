@@ -51,7 +51,9 @@ class ModelManager:
 
         # Prepare data
         if feature_cols is None:
-            feature_cols = [col for col in df.columns if col != target_col]
+            # Only include numeric columns (exclude date, team names, etc.)
+            feature_cols = [col for col in df.columns 
+                          if col != target_col and df[col].dtype in ['float64', 'int64', 'float32', 'int32']]
         
         if target_col not in df.columns:
             logger.error(f"Target column '{target_col}' not found")
