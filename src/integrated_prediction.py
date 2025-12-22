@@ -38,6 +38,9 @@ class BetRecommendation:
     live_odds_draw: Optional[float] = None
     live_odds_away: Optional[float] = None
     bookmaker: Optional[str] = None
+    predicted_home_goals: Optional[int] = None
+    predicted_away_goals: Optional[int] = None
+    predicted_scoreline: Optional[str] = None
 
 
 class IntegratedPredictionEngine:
@@ -405,7 +408,7 @@ class IntegratedPredictionEngine:
             else:
                 recommendation = "AVOID"
             
-            return BetRecommendation(
+            rec = BetRecommendation(
                 match_id=f"{home_team}_{away_team}_{sport}",
                 home_team=home_team,
                 away_team=away_team,
@@ -425,6 +428,13 @@ class IntegratedPredictionEngine:
                 live_odds_away=live_odds.get("away"),
                 bookmaker=live_odds.get("bookmaker")
             )
+
+            # Attach a plausible scoreline
+            ph, pa = self._generate_scoreline(predicted_winner, predicted_prob)
+            rec.predicted_home_goals = ph
+            rec.predicted_away_goals = pa
+            rec.predicted_scoreline = f"{ph}-{pa}"
+            return rec
             
         except Exception as e:
             logger.error(f"Error calculating bet recommendation: {e}")
@@ -533,6 +543,48 @@ class IntegratedPredictionEngine:
                 break
 
         return result
+
+    def _generate_scoreline(self, predicted_winner: str, prob: float) -> Tuple[int, int]:
+        """Generate a plausible scoreline using simple heuristics.
+        Uses the predicted winner and probability to skew goals.
+        """
+        try:
+            # Base expectations
+            import random
+            random.seed(int(pd.Timestamp.now().timestamp()) % 1_000_000)
+
+            # Map probability to goal expectation deltas
+            edge_strength = max(0.0, min(1.0, (prob - 0.5) * 2))  # 0..1
+            base_home = 1 + int(edge_strength >= 0.3)
+            base_away = 1
+
+            # Winner skew
+            if predicted_winner == "HOME":
+                hg = base_home + (1 if edge_strength > 0.6 else 0)
+                ag = base_away
+            else:
+                hg = base_away
+                ag = base_home + (1 if edge_strength > 0.6 else 0)
+
+            # Add small randomness (0-1 goal swing)
+            swing = random.choice([-1, 0, 0, 1])
+            if predicted_winner == "HOME":
+                hg = max(0, hg + max(0, swing))
+                ag = max(0, ag + min(0, swing))
+            else:
+                ag = max(0, ag + max(0, swing))
+                hg = max(0, hg + min(0, swing))
+
+            # Avoid draws unless probability very close to 0.5
+            if hg == ag and abs(prob - 0.5) > 0.1:
+                if predicted_winner == "HOME":
+                    hg = hg + 1
+                else:
+                    ag = ag + 1
+
+            return int(hg), int(ag)
+        except Exception:
+            return (2, 1) if predicted_winner == "HOME" else (1, 2)
 
     def generate_report(
         self,

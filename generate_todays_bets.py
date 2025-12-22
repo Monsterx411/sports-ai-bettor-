@@ -54,7 +54,8 @@ def main():
             print("-"*80)
 
             for idx, rec in enumerate(predictions, 1):
-                print(f"\n{idx}. {rec.home_team} vs {rec.away_team} [{rec.sport}]")
+                score_bracket = f" [{rec.predicted_scoreline}]" if getattr(rec, 'predicted_scoreline', None) else ""
+                print(f"\n{idx}. {rec.home_team} vs {rec.away_team}{score_bracket} [{rec.sport}]")
                 print(f"   Predicted: {rec.predicted_winner}")
                 print(f"   Confidence: {rec.prediction_confidence:.1%}")
                 print(f"   Edge: {rec.edge:.1%}")

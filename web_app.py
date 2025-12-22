@@ -12,6 +12,7 @@ from config.settings import settings
 from src.logger import setup_logger
 from src.data_fetch import get_fetcher
 from src.predictor import get_model_manager, BetAnalyzer
+from src.integrated_prediction import get_prediction_engine
 from src.utils import format_percentage
 
 logger = setup_logger(__name__)
@@ -55,8 +56,8 @@ st.markdown("# 🎯 Sports AI Bettor")
 st.markdown("AI-powered sports betting predictions and value bet analysis")
 
 # Create tabs
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["📊 Fixtures", "🔮 Predictions", "💰 Value Bets", "📈 Analytics"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["📊 Fixtures", "🔮 Predictions", "💰 Value Bets", "📈 Analytics", "📅 Daily Picks"]
 )
 
 with tab1:
@@ -241,6 +242,45 @@ with tab4:
                 st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning(f"⚠️ Model not found: {model_name}")
+
+with tab5:
+    st.markdown("## Daily Predictions (Auto)")
+    st.caption("Generates at least 10 recommendations across top sports and shows bracketed scorelines.")
+    auto_train = st.toggle("Auto-train advanced model", value=True)
+    min_matches = st.number_input("Minimum Matches", min_value=1, value=10, step=1)
+    sports_input = st.text_input("Sports (comma-separated)", value=settings.TOP_SPORTS)
+    run = st.button("🚀 Generate Today's Picks", type="primary")
+
+    if run:
+        with st.spinner("Generating predictions..."):
+            eng = get_prediction_engine()
+            try:
+                if auto_train:
+                    eng.train_on_live_and_historical(sport=settings.DEFAULT_SPORT, advanced=True)
+            except Exception as e:
+                st.info(f"Training skipped: {e}")
+
+            sports = [s.strip() for s in sports_input.split(',') if s.strip()]
+            recs = eng.get_daily_predictions(min_matches=min_matches, sports=sports)
+
+            if recs:
+                for r in recs:
+                    with st.container(border=True):
+                        bracket = f" [{r.predicted_scoreline}]" if getattr(r, 'predicted_scoreline', None) else ""
+                        st.subheader(f"{r.home_team} vs {r.away_team}{bracket} ({r.sport})")
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Pick", r.predicted_winner)
+                        with col2:
+                            st.metric("Confidence", f"{r.prediction_confidence:.1%}")
+                        with col3:
+                            st.metric("Edge", f"{r.edge:.1%}")
+                        with col4:
+                            st.metric("Odds", f"{(r.live_odds_home or r.live_odds_away or r.recommended_odds or 0):.2f}")
+                        st.caption(f"Recommendation: {r.recommendation}")
+                st.success(f"✅ Generated {len(recs)} recommendations")
+            else:
+                st.warning("No recommendations generated. Ensure API keys are set and try again.")
 
 # Footer
 st.markdown("---")

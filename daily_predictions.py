@@ -61,7 +61,7 @@ def main() -> int:
     sports = [s.strip() for s in settings.TOP_SPORTS.split(',') if s.strip()]
     recs = engine.get_daily_predictions(min_matches=settings.MIN_DAILY_MATCHES, sports=sports)
 
-    # Save
+    # Save JSON snapshot
     out = {
         "timestamp": today.isoformat(),
         "sports": sports,
@@ -74,11 +74,31 @@ def main() -> int:
     with open(out_path, "w") as f:
         json.dump(out, f, indent=2)
 
+    # Also save human-readable text under results/
+    results_dir = PROJECT_ROOT / "results"
+    results_dir.mkdir(exist_ok=True)
+    txt_path = results_dir / f"predictions_{today.strftime('%Y%m%d_%H%M%S')}.txt"
+    with open(txt_path, "w") as f:
+        f.write("=== Daily Predictions ===\n")
+        f.write(f"Timestamp: {date_str}\n")
+        f.write(f"Sports: {', '.join(sports)}\n")
+        f.write(f"Count: {len(recs)} (min {settings.MIN_DAILY_MATCHES})\n\n")
+        for i, r in enumerate(recs, 1):
+            bracket = f" [{r.predicted_scoreline}]" if getattr(r, 'predicted_scoreline', None) else ""
+            f.write(
+                f"{i}. {r.home_team} vs {r.away_team}{bracket} ({r.sport})\n"
+            )
+            f.write(
+                f"   Pick: {r.predicted_winner} | Conf: {r.prediction_confidence:.1%} | Edge: {r.edge:.1%} | Odds: {r.recommended_odds:.2f}\n"
+            )
+            f.write(f"   Recommendation: {r.recommendation}\n\n")
+
     # Print summary
     strong = sum(1 for r in recs if r.recommendation == "STRONG_BUY")
     buys = sum(1 for r in recs if r.recommendation == "BUY")
     print(f"Generated {len(recs)} recommendations (Strong: {strong}, Buy: {buys})")
     print(f"Saved to: {out_path}")
+    print(f"Text summary: {txt_path}")
 
     return 0
 
